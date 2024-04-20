@@ -112,43 +112,6 @@ computeDeltaPmcMatrix <- function(distbn_params_list, integralControl=list()) {
 }
 
 
-#' Take the output of `Mclust()` and format it for consumption by Pmc functions
-#' 
-#' @param res_mclust Output of `Mclust()` function call
-#' @param single_element Whether to combine into a single list element
-.buildPmcParamsMclust <- function(res_mclust, single_element=F) {
-  params <- res_mclust$parameters
-  
-  K <- length(params$pro)
-  if (res_mclust$d == 1) {
-    params$mean <- matrix(params$mean, nrow=1)
-    params$variance$sigma <- array(params$variance$sigmasq, dim=c(1, 1, K))
-  }
-  
-  output <- lapply(1:K, function(j) {
-    list(
-      prob=params$pro[j],
-      mean=params$mean[, j, drop=F],
-      var=params$variance$sigma[, , j, drop=F]
-    )
-  })
-  
-  if (single_element) {
-    g <- function(a, b) {
-      list(
-        mean=cbind(a$mean, b$mean),
-        prob=c(a$prob, b$prob),
-        var=abind(a$var, b$var, along=3)
-      )
-    }
-    output <- Reduce(g, output)
-    
-  } else {
-    return(output)
-  }
-}
-
-
 #' PHM Algorithm
 #' 
 #' Implements Baudry et al. 2010 merging procedure based on Pmc
