@@ -251,31 +251,31 @@ plotDistruct <- function(phm_output, k, colors=NULL) {
 
 
 
-distbn_params_list <- list(
-  list(
-    prob=1/3,
-    mean=matrix(-3, nrow=1, ncol=1),
-    var=array(1, dim=c(1, 1, 1))
-  ),
-  list(
-    prob=1/3,
-    mean=matrix(0, nrow=1, ncol=1),
-    var=array(1, dim=c(1, 1, 1))
-  ),
-  list(
-    prob=1/3,
-    mean=matrix(5, nrow=1, ncol=1),
-    var=array(2, dim=c(1, 1, 1))
-  )
-)
-
-data <- .sampleMixture(distbn_params_list, 1000)
-
-post_vals <- .computePosteriorProbMatrix(distbn_params_list, data)
-res_mclust <- Mclust(data)
-
-phm_output <- PHM(res_mclust, mc_est=F)
-
-plotPHMDendrogram(phm_output)
-plotPmcMatrix(phm_output, include_pmc_title = F)
-
+# distbn_params_list <- list(
+#   list(
+#     prob=1/3,
+#     mean=matrix(-3, nrow=1, ncol=1),
+#     var=array(1, dim=c(1, 1, 1))
+#   ),
+#   list(
+#     prob=1/3,
+#     mean=matrix(0, nrow=1, ncol=1),
+#     var=array(1, dim=c(1, 1, 1))
+#   ),
+#   list(
+#     prob=1/3,
+#     mean=matrix(5, nrow=1, ncol=1),
+#     var=array(2, dim=c(1, 1, 1))
+#   )
+# )
+# 
+# data <- .sampleMixture(distbn_params_list, 1000)
+# 
+# post_vals <- .computePosteriorProbMatrix(distbn_params_list, data)
+# res_mclust <- Mclust(data)
+# 
+# phm_output <- PHM(res_mclust, mc_est=F)
+# 
+# plotPHMDendrogram(phm_output)
+# plotPmcMatrix(phm_output, include_pmc_title = F)
+# 
