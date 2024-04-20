@@ -9,7 +9,7 @@ library(latex2exp)
 
 rm(list=ls())
 
-source("Pmc_implementation.R")
+source("code/Pmc_implementation.R")
 
 #' Generate the distribution parameter object for this simulation
 #' 
