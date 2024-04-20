@@ -1,11 +1,12 @@
 ## Functions that implement the visualizations for the paper
 ## Date: 4/19/2024
 
-library(dplyr)
+library(latex2exp)
 library(ggplot2)
 library(RColorBrewer)
+library(dplyr)
+library(tibble)
 library(tidyr)
-library(latex2exp)
 
 source("PHM_algorithm.R")
 
@@ -175,9 +176,11 @@ plotPHMDendrogram <- function(phm_output, colors=NULL) {
 #' @param temp doot
 #' 
 #' @return pew
-plotPmcMatrix <- function(phm_output, k=length(phm_output), colors=NULL,
+plotPmcMatrix <- function(phm_output, k=NULL, colors=NULL,
                           threshold=1e-3, threshold_replace="< 0.001", fmt_func=NULL,
-                          pmc_title=T) {
+                          include_pmc_title=T) {
+  
+  k <- phm_output[[length(phm_output)]]$clusters
   if (is.null(colors)) colors <- brewer.pal(k, "Set1")
   if (is.null(fmt_func)) fmt_func<- function(x) round(x, 4)
 
@@ -186,9 +189,11 @@ plotPmcMatrix <- function(phm_output, k=length(phm_output), colors=NULL,
   pmc <- sum(pmc_matrix)
   title_obj <- ggtitle(TeX(paste0("$P_{mc} =", fmt_func(pmc), "$")))
 
+  colnames(pmc_matrix) <- paste0("V", 1:k)
+  
   pmc_matrix_long <- (2 * pmc_matrix) %>%
     # Data wrangling
-    as_tibble() %>%
+    as_tibble(.name_repair="unique") %>%
     rowid_to_column(var="X") %>%
     gather(key="Y", value="Z", -1) %>%
     mutate(Y=as.numeric(gsub("V","",Y)))  
@@ -225,7 +230,7 @@ plotPmcMatrix <- function(phm_output, k=length(phm_output), colors=NULL,
           axis.text.x=element_text(color=colors),
           axis.text.y=element_text(color=colors))
   
-  if (pmc_title == T) 
+  if (include_pmc_title == T) 
     htmp <- htmp + title_obj
   
   return(htmp)
@@ -272,5 +277,5 @@ res_mclust <- Mclust(data)
 phm_output <- PHM(res_mclust, mc_est=F)
 
 plotPHMDendrogram(phm_output)
-plotPmcMatrix(phm_output)
+plotPmcMatrix(phm_output, include_pmc_title = F)
 
