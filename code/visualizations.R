@@ -8,7 +8,7 @@ library(dplyr)
 library(tibble)
 library(tidyr)
 
-source("PHM_algorithm.R")
+source("code/PHM_algorithm.R")
 
 #' Build dendrogram data from output of `PHM()`
 #' 

@@ -3,7 +3,7 @@
 
 library(mclust)
 
-source("Pmc_implementation.R")
+source("code/Pmc_implementation.R")
 
 #' Monte Carlo $\Delta P_{\rm {mc}}$ Matrix computation
 #' 
