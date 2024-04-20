@@ -1,4 +1,4 @@
-## Generate Supplementary Figure 1: Two Gaussians at different levels of Pmc
+## Generate Supplementary Figure 2: Two Gaussians at different levels of Pmc
 ## NOTE: Should be run from base directory
 ## Date: 4/19/2024
 
@@ -6,6 +6,7 @@ library(tidyr)
 library(dplyr)
 library(ggplot2)
 library(latex2exp)
+library(gridExtra)
 
 rm(list=ls())
 
@@ -70,7 +71,7 @@ for (idx in 1:length(cutoffs)) {
 ## Keep the environment clean
 rm(idx, mu2, pmc, plt, dens1, dens2, xvals)
 
-## Make sure these are very close
+## Make sure these are very close (for tuning step size)
 data.frame(
     truth=cutoffs,
     value=realized_pmc,
@@ -79,7 +80,7 @@ data.frame(
   t()
 
 ## Visualize the distributions
-plot_arrange <- do.call(gridExtra::arrangeGrob, c(list(ncol=3, nrow=2), plots))
+plot_arrange <- do.call(arrangeGrob, c(list(ncol=3, nrow=2), plots))
 plot(plot_arrange)
 
 ggsave(filename="plots/pmc_2gaus_visualize.png",
