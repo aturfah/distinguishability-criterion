@@ -1,5 +1,7 @@
 ## Images
 *.png
+output/*
+
 
 # History files
 .Rhistory
