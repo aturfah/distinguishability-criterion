@@ -245,15 +245,26 @@ plotPmcMatrix <- function(phm_output, k=NULL, colors=NULL,
 #' @param k Number of clusters for which to generate the distruct plot
 #' @param labels Ground truth class labels for the observations (ordered factor vector)
 #' @param colors Optinal vector with colors for the mixture components
+#' @param include_title Whether to include the default title with Pmc and k values
 plotPHMDistruct <- function(phm_output, k=length(phm_output),  
-                         labels, 
-                         colors=NULL) {
+                         labels, colors=NULL, include_title=FALSE) {
 
   ## Validation
   if (is.null(colors)) colors <- brewer.pal(k, "Set1")
   post_mat <- phm_output[[k]]$posterior_matrix
+  if (is.null(post_mat)) stop("Does phm_output have a posterior matrix computed?")
+  
+  
   labels_order=levels(labels)
 
+  ## Format the title
+  pmc_k <- phm_output[[k]]$pmc
+  display_pmc <- ifelse(
+    pmc_k < 1e-3,
+    formatC(pmc_k, format = "e", digits = 2),
+    round(pmc_k, 4)
+  )
+  
   ## Define break points for the distruct plot
   group_counts <- table(labels)
   label_positions <- sapply(1:length(group_counts), function(idx) {
@@ -276,7 +287,7 @@ plotPHMDistruct <- function(phm_output, k=length(phm_output),
     pivot_longer(cols=c(minX, maxX))
   
   ## Distruct plot
-  plt_data %>%
+  plt <- plt_data %>%
     ggplot(aes(x=row, y=value, fill=name)) +
     geom_bar(position="stack", stat="identity") +
     xlab("") + ylab("") +
@@ -298,48 +309,54 @@ plotPHMDistruct <- function(phm_output, k=length(phm_output),
                        legend.position="none",
                        plot.margin = unit(c(0.01, 0.03, 0, 0.01), 
                                           "inches"))
+  
+  if (include_title == TRUE) {
+    plt <- plt + ggtitle(TeX(paste0("K = ", k, "; ", "$P_{MC} =$", " ", display_pmc)))
+  }
+  
+  return(plt)
 }
 
 
 
-group_counts <- c(100, 300, 200)
-distbn_params_list <- list(
-  list(
-    prob=group_counts[1]/sum(group_counts),
-    mean=matrix(-3, nrow=1, ncol=1),
-    var=array(1, dim=c(1, 1, 1))
-  ),
-  list(
-    prob=group_counts[2]/sum(group_counts),
-    mean=matrix(0, nrow=1, ncol=1),
-    var=array(1, dim=c(1, 1, 1))
-  ),
-  list(
-    prob=group_counts[3]/sum(group_counts),
-    mean=matrix(5, nrow=1, ncol=1),
-    var=array(2, dim=c(1, 1, 1))
-  )
-)
-
-data <- rbind(
-  .sampleMixture(list(distbn_params_list[[1]]), group_counts[1]),
-  .sampleMixture(list(distbn_params_list[[2]]), group_counts[2]),
-  .sampleMixture(list(distbn_params_list[[3]]), group_counts[3])
-)
-
-labels <- factor(
-  c(rep("a", group_counts[1]), 
-    rep("b", group_counts[2]), 
-    rep("c", group_counts[3])),
-  levels=c("a", "c", "b"),
-  ordered=T
-)
-
-# post_vals <- .computePosteriorProbMatrix(distbn_params_list, data)
-res_mclust <- Mclust(data)
-
-phm_output <- PHM(res_mclust, data=data, mc_est=F)
-
-plotPHMDendrogram(phm_output)
-plotPmcMatrix(phm_output, include_pmc_title = F)
-plotPHMDistruct(phm_output, labels=labels, colors=c("red", "cyan", "magenta"))
+# group_counts <- c(100, 300, 200)
+# distbn_params_list <- list(
+#   list(
+#     prob=group_counts[1]/sum(group_counts),
+#     mean=matrix(-3, nrow=1, ncol=1),
+#     var=array(1, dim=c(1, 1, 1))
+#   ),
+#   list(
+#     prob=group_counts[2]/sum(group_counts),
+#     mean=matrix(0, nrow=1, ncol=1),
+#     var=array(1, dim=c(1, 1, 1))
+#   ),
+#   list(
+#     prob=group_counts[3]/sum(group_counts),
+#     mean=matrix(5, nrow=1, ncol=1),
+#     var=array(2, dim=c(1, 1, 1))
+#   )
+# )
+# 
+# data <- rbind(
+#   .sampleMixture(list(distbn_params_list[[1]]), group_counts[1]),
+#   .sampleMixture(list(distbn_params_list[[2]]), group_counts[2]),
+#   .sampleMixture(list(distbn_params_list[[3]]), group_counts[3])
+# )
+# 
+# labels <- factor(
+#   c(rep("a", group_counts[1]), 
+#     rep("b", group_counts[2]), 
+#     rep("c", group_counts[3])),
+#   levels=c("a", "c", "b"),
+#   ordered=T
+# )
+# 
+# # post_vals <- .computePosteriorProbMatrix(distbn_params_list, data)
+# res_mclust <- Mclust(data)
+# 
+# phm_output <- PHM(res_mclust, data=data, mc_est=F)
+# 
+# plotPHMDendrogram(phm_output)
+# plotPmcMatrix(phm_output, include_pmc_title = F)
+# plotPHMDistruct(phm_output, labels=labels, colors=c("red", "cyan", "magenta"))
