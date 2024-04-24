@@ -2,6 +2,7 @@
 ## Date: 4/20/2024
 
 library(stringr)
+library(gridExtra)
 
 rm(list=ls())
 source("code/PHM_algorithm.R")
@@ -16,7 +17,26 @@ allele_dosage_matrix <- apply(data_raw[, 4:ncol(data_raw)], 2, function(vec) {
   
   str_count(vec, ref_allele)
 })
-
+geographic_labels <- factor(data_raw[, 3],
+                            levels=c("EUROPE",
+                                     "CENTRAL_SOUTH_ASIA",
+                                     "MIDDLE_EAST", 
+                                     "OCEANIA",
+                                     "EAST_ASIA",
+                                     "AMERICA",
+                                     "AFRICA"), ordered=T)
+geographic_levels <- levels(geographic_labels)
+geographic_levels <- case_when(
+  geographic_levels == "CENTRAL_SOUTH_ASIA" ~ "C/S Asia",
+  geographic_levels == "MIDDLE_EAST" ~ "Middle East",
+  geographic_levels == "EUROPE" ~ "Europe",
+  geographic_levels == "AFRICA" ~ "Africa",
+  geographic_levels == "OCEANIA" ~ "Oceania",
+  geographic_levels == "EAST_ASIA" ~ "East Asia",
+  geographic_levels == "AMERICA" ~ "America",
+  TRUE ~ geographic_levels
+)
+levels(geographic_labels) <- geographic_levels
 
 ## PCA
 pc_res <- prcomp(allele_dosage_matrix)
@@ -49,6 +69,36 @@ gmm_hgdp <- Mclust(pc_matrix)
 
 gmm_hgdp$G
 
-phm_res <- PHM(gmm_hgdp, mc.samples=1e6, num.cores=7)
+phm_res <- PHM(gmm_hgdp, data=pc_matrix, mc.samples=1e6, num.cores=7)
 
-plotPHMDendrogram(phm_res)
+
+colors <- c("posterior.1"="coral",
+            "posterior.2"="olivedrab",
+            "posterior.3"="plum",
+            "posterior.4"="snow4", 
+            "posterior.5"="gold",
+            "posterior.6"="coral4",
+            "posterior.7"="royalblue")
+
+
+plt_dendro <- plotPHMDendrogram(phm_res, colors=colors)
+plt_distruct <- plotPHMDistruct(phm_res, labels=geographic_labels, colors=colors,
+                                include_title=T)
+
+plt_dendro
+plt_distruct
+
+plt_joined <- arrangeGrob(plt_dendro, 
+                          plt_distruct, 
+                          nrow=2, ncol=1,
+                          heights=list( unit(3, "in"), unit(1, "in")  ))
+plot(plt_joined)
+# ggsave("meeting_notes/2024_0214/hgdp_results/dendogram_distruct.png",
+#        dend_disrupt_joined,
+#        width=6, height=4, units="in")
+ggsave("plots/hgdp_phm.png",
+       plot=plt_joined,
+       width=6, height=4,
+       units="in")
+
+
