@@ -36,7 +36,8 @@ computePmcBootstrapPvalue <- function(dat, bs_samp=500) {
 
 ## Set the sample for all data to be evaluated separately
 set.seed(20240119)
-data <- lapply(1:5000, function(x) rnorm(150))
+replicates <- 5000
+data <- lapply(1:replicates, function(x) rnorm(150))
 output_prefix <- "output/hclust_hyp_test"
 
 if (!dir.exists(output_prefix)) 
@@ -92,7 +93,7 @@ bootstrap_pvalue <- sapply(1:length(data), function(idx) {
     output <- computePmcBootstrapPvalue(data[[idx]])
     save(output, file=output_file)
   }
-  if (idx == 1 | idx %% 5 == 0)  cat("Completed:", idx, "    \n")
+  if (idx == 1 | idx %% 5 == 0)  cat("Completed:", idx, "    \n\n")
   
   return(output)
 })
