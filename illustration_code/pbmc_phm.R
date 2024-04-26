@@ -3,6 +3,7 @@
 
 library(dplyr)
 library(Seurat)
+library(gridExtra)
 
 rm(list=ls())
 source("code/PHM_algorithm.R")
@@ -37,6 +38,32 @@ ggsave("plots/pbmc_screeplot.png",
        plot=screeplot,
        height=3, width=6, units="in")
 
+## Use the Louvain algorithm with bandwidth=0.5 to identify the cell types present in the sample
+pbmc <- FindNeighbors(pbmc, dims = 1:10)
+pbmc <- FindClusters(pbmc, resolution = 0.5)
+
+mapCellType <- function(vec) {
+  sapply(vec, function(idx) cluster_cell_types[idx + 1])
+}
+cluster_cell_types <- c("Naive CD4+ T", 
+                        "CD14+ Mono",
+                        "Memory CD4+ T",
+                        "B",
+                        "CD8+ T",
+                        "FCGR3A+ Mono",
+                        "NK", 
+                        "DC",
+                        "Platelet")
+
+cluster_levels <- c("Naive CD4+ T", "DC", "NK", "Memory CD4+ T",
+                   "Platelet", "CD8+ T",
+                   "B", "FCGR3A+ Mono", 
+                   "CD14+ Mono")
+
+raw_labels <- pbmc$seurat_clusters
+mapped_labels <- mapCellType(as.numeric(as.character(raw_labels)))
+mapped_labels <- factor(mapped_labels, levels=cluster_levels)
+
 
 ## Run PHM Procedure based on 10 PCs
 num_pcs <- 10
@@ -47,16 +74,35 @@ embed_mat <- embed_mat[, 1:num_pcs]
 
 set.seed(20240308)
 gmm_pbmc <- Mclust(embed_mat, G=1:15, warn=T)
-phm_res <- PHM(gmm_pbmc, mc.samples=1e6, num.cores=7)
+phm_res <- PHM(gmm_pbmc, mc.samples=1e6, data=embed_mat, num.cores=7)
 
-dendro <- plotPHMDendrogram(phm_res)
-plot(dendro)
+colors <- c("posterior.1"="royalblue3",
+            "posterior.2"="olivedrab",
+            "posterior.3"="magenta",
+            "posterior.4"="coral", 
+            "posterior.5"="gold",
+            "posterior.6"="coral4",
+            "posterior.7"="lightgray",
+            "posterior.8"="plum",
+            "posterior.9"="skyblue"
+)
 
-ggsave("plots/pbmc_phm_dendro.png",
-       plot=dendro,
-       height=4, width=6, units="in")
+plt_dendro <- plotPHMDendrogram(phm_res, colors=colors)
+plt_distruct <- plotPHMDistruct(phm_res, 
+                                labels=mapped_labels, 
+                                colors=colors,
+                                include_title=T)
 
+plt_joined <- arrangeGrob(plt_dendro, 
+                          plt_distruct, 
+                          nrow=2, ncol=1,
+                          heights=list( unit(3, "in"), unit(1, "in")  ))
 
-## Use the Louvain algorithm to identify the cell types present in the sample
-## TODO: Add distruct plot
+plot(plt_joined)
+
+ggsave("plots/pbmc_phm.png",
+       plot=plt_joined,
+       width=6, height=4,
+       units="in")
+
 
