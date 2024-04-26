@@ -226,7 +226,12 @@ computePmc <- function(distbn_params_list, integralControl=list()) {
   D <- nrow(distbn_params_list[[1]]$mean)
   
   ## Pmc trivially 0 for a single cluster
-  if (K == 1) return(0)
+  if (K == 1) return(list(
+    integral=0,
+    error=NULL,
+    neval=NULL,
+    returnCode=0
+  ))
   
   ## Input validation: Make sure component probabilities all scale to 1
   probs <- lapply(distbn_params_list, function(x) x$prob)
