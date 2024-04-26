@@ -4,7 +4,7 @@ Implementations of the Distinguishability criterion and scripts to generate the 
 
 ## Directory structure
 
-- The implementation of the Distinguishability criterion, the PHM algorithm, and the code to generate the visualizations are in the `code/` directory.
-- The scripts to replicate the results from the paper are in the `illustrations/` directory. 
+- The implementation of the Distinguishability criterion, the PHM algorithm, and the code to generate the visualizations are in the `code/` directory. [Link to README](code/README.md)
+- The scripts to replicate the results from the paper are in the `illustrations/` directory. [Link to README](illustration_code/README.md)
 - `.RData` files from the scripts will be written to the `output/` directory. 
 - Figures from the scripts will be written into the `plots/` directory.
