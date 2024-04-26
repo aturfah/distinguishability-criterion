@@ -28,6 +28,8 @@ All scripts must be run with the "working directory" set to the repository root 
 
 ## Additional Files
 
-- [`hyp_test_helpers.R`](hyp_test_helpers.R): Implements the Gao et al. and Pmc hierarchical clustering procedure, as well as the function to perform hierarchical clustering.
-- [`stability_helpers.R`](stability_helpers.R): Implements the functions to calculate Pmc for a range of *K* values for k-means and hierarchical clustering. Also compute the cluster validity indices (Silhouette score, Stability based on ARI, and Prediction strength).
+Files that contain functions used across multiple analyses.
+
+- [`hyp_test_helpers.R`](hyp_test_helpers.R): Functions to perform the Gao et al. and Pmc hierarchical clustering procedures, as well as the function to perform hierarchical clustering.
+- [`stability_helpers.R`](stability_helpers.R): Implements the functions to calculate Pmc for a range of *K* values for k-means and hierarchical clustering. Also compute the Silhouette score, Stability based on ARI, and Prediction strength.
 - [`prediction_strength_function.R`](prediction_strength_function.R): Slightly modified version of `fpc::prediction.strength()` to work with the hierarchical clustering and k-means functions used elsewhere in this repo.
