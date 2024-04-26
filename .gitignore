@@ -1,6 +1,7 @@
 ## Images
 *.png
-output/*
+output/*/*.RData
+output/*/*.Rdata
 
 
 # History files
