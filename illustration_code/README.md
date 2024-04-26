@@ -1,6 +1,6 @@
 # Scripts to generate results
 
-All scripts must be run with the "working directory" set to the repository root (i.e. the `code` folder should be visible). Larger-scale simulation output will be saved as `.RData` files to the `output/` directory, and loaded if available. Generated figures will be saved to the `plots/` directory. Tables are output as text.
+Scripts are self-contained and can be run as-is. They should be run with the "working directory" set to the repository directory (i.e. the `code` folder should be visible). Larger-scale simulation output will be saved as `.RData` files to the `output/` directory, and loaded if available. Generated figures will be saved to the `plots/` directory. Tables are output as text.
 
 ## Main Body Figures
 
