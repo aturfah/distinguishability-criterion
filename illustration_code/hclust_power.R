@@ -8,7 +8,7 @@ library(latex2exp)
 
 rm(list=ls())
 
-source("illustration_code/cluster_helpers.R")
+source("illustration_code/hyp_test_helpers.R")
 
 ## Set the simulation parameters
 pmc_cutoff <- 0.094

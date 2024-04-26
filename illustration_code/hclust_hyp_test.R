@@ -13,7 +13,7 @@ rm(list=ls())
 
 
 source("code/Pmc_implementation.R")
-source("illustration_code/cluster_helpers.R")
+source("illustration_code/hyp_test_helpers.R")
 
 #' Compute Pmc p-value for first split in hierarchical clustering via bootstrap procedure
 #' 
