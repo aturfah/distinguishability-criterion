@@ -6,7 +6,7 @@ library(parallel) ## mclapply for MC Integration
 library(mvtnorm)  ## Multivariate Gaussian functions (sampling, density)
 
 
-#' Take the output of `Mclust()` and format it for consumption by Pmc functions
+#' Take the output of `Mclust()` and format it for consumption by `compute*Pmc` functions
 #' 
 #' @param res_mclust Output of `Mclust()` function call
 #' @param single_element Whether to combine into a single list element
