@@ -4,6 +4,7 @@
 library(cubature) ## Cubature integration package
 library(parallel) ## mclapply for MC Integration
 library(mvtnorm)  ## Multivariate Gaussian functions (sampling, density)
+library(abind)    ## Concatenate arrays
 
 
 #' Take the output of `Mclust()` and format it for consumption by `compute*Pmc` functions
