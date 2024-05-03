@@ -11,6 +11,8 @@ library(abind)    ## Concatenate arrays
 #' 
 #' @param res_mclust Output of `Mclust()` function call
 #' @param single_element Whether to combine into a single list element
+#' 
+#' @return List of lists; each list contains the parameters for the mixture component
 .buildPmcParamsMclust <- function(res_mclust, single_element=F) {
   params <- res_mclust$parameters
   
@@ -48,7 +50,7 @@ library(abind)    ## Concatenate arrays
 #' 
 #' Generates `num_samples` observations from a Gaussian with parameters described by `distbn_params`
 #' 
-#' @param distbn_params List containing the mean, variance, and proportions for this mixture component
+#' @param distbn_params List containing the mean, variance matrix, and proportions for this mixture component
 #' @param num_samples Number of observations to draw from this distribution
 #' 
 #' @return A matrix with `num_samples` rows
@@ -69,7 +71,7 @@ library(abind)    ## Concatenate arrays
     ## With the counts sample from the subdivision
     output <- lapply(1:K, function(idx) {
       if (Nk_vec[idx] == 0) return(NULL)
-      sample_distbn(list(
+      sampleDistbn(list(
         mean=mean[, idx, drop=F],
         var=var[, , idx, drop=F],
         prob=1
@@ -112,10 +114,12 @@ library(abind)    ## Concatenate arrays
 #' 
 #' @param distbn_params List with mean, covariance, and probability measurements
 #' 
-#' `distbn_params` should have three named components
+#' `distbn_params` should be a list with three named components
 #' - `mean` should be a `DxK` matrix where each column corresponds to a component mean
 #' - `var` should be a `DxDxK` array where each slice corresponds to a covariance matrix
 #' - `prob` should be a `K` dimensional vector for the proportions within the parent mixture
+#' 
+#' @return A function with the density function parametrized by `distbn_params`
 .generateDistbnFunc <- function(distbn_params) {
   ## Normalize the probabilities of each component
   M <-  length(distbn_params$prob)
