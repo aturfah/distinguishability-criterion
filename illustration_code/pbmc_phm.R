@@ -74,7 +74,7 @@ embed_mat <- embed_mat[, 1:num_pcs]
 
 set.seed(20240308)
 gmm_pbmc <- Mclust(embed_mat, G=1:15, warn=T)
-phm_res <- PHM(gmm_pbmc, mc.samples=1e6, data=embed_mat, num.cores=7)
+phm_res <- PHM(gmm_pbmc, mc.samples=1e6, data=embed_mat, num.cores=8)
 
 colors <- c("posterior.1"="royalblue3",
             "posterior.2"="olivedrab",
@@ -91,7 +91,8 @@ plt_dendro <- plotPHMDendrogram(phm_res, colors=colors)
 plt_distruct <- plotPHMDistruct(phm_res, 
                                 labels=mapped_labels, 
                                 colors=colors,
-                                include_title=T)
+                                include_title=T) +
+  theme(text=element_text(size=20))
 
 plt_joined <- arrangeGrob(plt_dendro, 
                           plt_distruct, 
@@ -103,6 +104,11 @@ plot(plt_joined)
 ggsave("plots/pbmc_phm.png",
        plot=plt_joined,
        width=6, height=4,
+       units="in")
+
+ggsave("plots/pbmc_phm_distruct.png",
+       plot=plt_distruct,
+       width=6.4, height=1.1,
        units="in")
 
 
