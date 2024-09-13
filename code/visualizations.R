@@ -81,7 +81,7 @@ source("code/PHM_algorithm.R")
     }
   }
   x_posns <- order_x(merge_tree)
-  
+
   map_xposns <- function(vec) {
     sapply(vec, function(x) which(x_posns == x))
   }
@@ -91,7 +91,7 @@ source("code/PHM_algorithm.R")
   while(any(is.na(output))) {
     output <- output %>%
       left_join(output, by=c("y"="yend")) %>%
-      rename(x=x.x,
+      dplyr::rename(x=x.x,
              ID=ID.x,
              pmc=pmc.x,
              pmc_change=pmc_change.x) %>%
@@ -272,10 +272,34 @@ plotPHMDistruct <- function(phm_output, k=length(phm_output),
   })
 
   ## Form data for plotting
-  plt_data <- data.frame(labels=labels, posterior=post_mat) %>%
-    arrange(labels) %>%
+  df <- data.frame(labels=labels, posterior=post_mat)
+  
+  group_columns_df <- df %>%
+    rowwise() %>%
+    mutate(max_column = which.max(c_across(where(is.numeric)))) %>%
+    ungroup() %>%
+    select(-starts_with("posterior")) %>%
+    group_by(labels, max_column) %>%
+    summarize(count=n()) %>%
+    group_by(labels) %>%
+    filter(count == max(count))
+  
+  group_columns <- pull(group_columns_df, "max_column")
+  names(group_columns) <- pull(group_columns_df, "labels")
+  
+  plt_data <- df %>%
+    rowwise() %>%
+    mutate(sort_val = c_across(where(is.numeric))[group_columns[labels]]) %>%
+    ungroup() %>%
+    arrange(labels, -sort_val) %>%
     mutate(row=1:n()) %>%
-    pivot_longer(cols=starts_with("posterior"))
+    pivot_longer(cols=starts_with("posterior")) %>%
+    arrange(row, value)
+    
+  # plt_data <- df %>%
+  #   arrange(labels, -across(paste0("posterior.", column_sort_order))) %>%
+  #   mutate(row=1:n()) %>%
+  #   pivot_longer(cols=starts_with("posterior")) 
   
   ## Positions for vertical lines
   vert_lines <- plt_data %>%
