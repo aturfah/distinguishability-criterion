@@ -216,3 +216,21 @@ PHM <- function(res_mclust, data=NULL, mc_est=T, ...) {
 }
 
 
+#' Find the solution for PHM at a specified threshold
+#' 
+#' @param phm_output Output of `PHM`
+#' @param threshold Pmc threshold, default is 0.01
+#' 
+#' TODO: Fill in Returns + More detailed description
+#' 
+#' @return Cluster results based on GMM satisfying specified threshold
+thresholdPHM <- function(phm_output, threshold=0.01) {
+  kappa <- length(phm_output)
+  for (k in kappa:1) {
+    if (phm_output[[k]]$pmc < threshold) {
+      break 
+    }
+  }
+  
+  return(phm_output[[k]])
+}
