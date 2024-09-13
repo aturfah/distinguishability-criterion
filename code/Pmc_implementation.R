@@ -279,7 +279,7 @@ computePmc <- function(distbn_params_list, integralControl=list()) {
   
   ## Input validation: Make sure component probabilities all scale to 1
   probs <- lapply(distbn_params_list, function(x) x$prob)
-  total_prob <- sum(Reduce(c, probs))
+  total_prob <- Reduce(sum, probs)
   
   if (total_prob != 1) {
     warning("Probabilities in distbn_params_list do not sum to 1. Re-scaling...")
