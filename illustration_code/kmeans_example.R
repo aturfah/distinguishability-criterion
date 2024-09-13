@@ -46,7 +46,7 @@ plt_pmc <- results_kmeans %>%
                      panel.grid.minor=element_blank())
 
 plt_gap <- results_kmeans %>%
-  ggplot(aes(x=K, y=Gap)) +
+  ggplot(aes(x=k, y=Gap)) +
   scale_x_continuous(breaks=results_kmeans$k) + 
   ylab("Gap Statistic") +
   geom_point(size=0.75) + geom_line() +
@@ -57,7 +57,7 @@ plt_gap <- results_kmeans %>%
   cbind(ZERO=1e-6) %>%
   ggplot(aes(x=k, y=ZERO)) +
   geom_segment(aes(x=k, xend=k, y=ZERO, yend=Gap), lineend="round", linewidth=1.5) +
-  ylab(TeX("Silhouette")) +
+  ylab(TeX("Gap Statistic")) +
   scale_x_continuous(breaks=results_kmeans$k) + 
   theme_bw() + theme(text=element_text(size=8), legend.position="none",
                      panel.grid.minor=element_blank())
