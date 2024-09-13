@@ -7,12 +7,34 @@ library(mvtnorm)  ## Multivariate Gaussian functions (sampling, density)
 library(abind)    ## Concatenate arrays
 
 
+#' Comstruc Pmc parameter list for Mclust
+#' 
+#' @description
 #' Take the output of `Mclust()` and format it for consumption by `compute*Pmc` functions
+#' 
+#' @details
+#' This function takes the parameters object from the output of `Mclust()` and
+#' transforms it to define a GMM for use in the `compute*Pmc` functions. The output
+#' is a list of lists, where each sublist corresponds ot the parameters of a single
+#' cluster distribution (default is a single Gaussian component, K = 1).
+#' 
+#' If `single_element = TRUE`, then all components will be combined into a single
+#' cluster list; i.e. K > 1
+#' 
+#' The parameters in each sublist are
+#' - `mean` should be a `DxK` matrix where each column corresponds to a component mean
+#' - `var` should be a `DxDxK` array where each slice corresponds to a covariance matrix
+#' - `prob` should be a `K` dimensional vector for the proportions within the parent mixture
 #' 
 #' @param res_mclust Output of `Mclust()` function call
 #' @param single_element Whether to combine into a single list element
 #' 
-#' @return List of lists; each list contains the parameters for the mixture component
+#' @examples
+#' # dat <- c(rnorm(100), rnorm(100, 3))
+#' # mcl <- Mclust(dat)
+#' # .buildPmcParamsMclust(mcl)
+#' 
+#' @returns List of lists where each sublist contains the parameters for the mixture component
 .buildPmcParamsMclust <- function(res_mclust, single_element=F) {
   params <- res_mclust$parameters
   
@@ -48,7 +70,13 @@ library(abind)    ## Concatenate arrays
 
 #' Draw observations from a given Gaussian mixture component.
 #' 
+#' @description
 #' Generates `num_samples` observations from a Gaussian with parameters described by `distbn_params`
+#' 
+#' @details
+#' The form of `distbn_params` should correspond to one sublist element from
+#' `.buildPmcParamsMclust` (see that function details for more information).
+#' 
 #' 
 #' @param distbn_params List containing the mean, variance matrix, and proportions for this mixture component
 #' @param num_samples Number of observations to draw from this distribution
@@ -71,7 +99,7 @@ library(abind)    ## Concatenate arrays
     ## With the counts sample from the subdivision
     output <- lapply(1:K, function(idx) {
       if (Nk_vec[idx] == 0) return(NULL)
-      sampleDistbn(list(
+      .sampleDistbn(list(
         mean=mean[, idx, drop=F],
         var=var[, , idx, drop=F],
         prob=1
@@ -87,7 +115,12 @@ library(abind)    ## Concatenate arrays
 
 #' Draw observations from the overall mixture distrubition
 #' 
+#' @description
 #' Generates `num_samples` observations from the Gaussian mixture distribution with parameters specified in `distbn_params_list`
+#' 
+#' @details
+#' `distbn_params_list` should match the output from  `.buildPmcParamsMclust()`.
+#' 
 #' 
 #' @param distbn_params_list List of lists containing the mean, variance, and proportions for all mixture components.
 #' @param num_samples Total number of samples to draw from the overall mixture distribution.
@@ -110,14 +143,15 @@ library(abind)    ## Concatenate arrays
 
 #' PDF of a Gaussian mixture component
 #' 
+#' @description
 #' For a GMM component with parameters specified by `distbn_params`, return a function to compute its pdf
 #' 
-#' @param distbn_params List with mean, covariance, and probability measurements
+#' @details
+#' See `.buildPmcParamsMclust` for the form of `distbn_params`
 #' 
-#' `distbn_params` should be a list with three named components
-#' - `mean` should be a `DxK` matrix where each column corresponds to a component mean
-#' - `var` should be a `DxDxK` array where each slice corresponds to a covariance matrix
-#' - `prob` should be a `K` dimensional vector for the proportions within the parent mixture
+#' 
+#' @param distbn_params List with mean, covariance, and probability measurements
+#' @param log Whether to get log-density
 #' 
 #' @return A function with the density function parametrized by `distbn_params`
 .generateDistbnFunc <- function(distbn_params) {
@@ -145,9 +179,14 @@ library(abind)    ## Concatenate arrays
 
 #' Posterior assignment probability ($\pi_j$(x)) function
 #' 
+#' @description
 #' Get a function to compute the posterior assignment probability for the $j^{th}$ cluster
 #' 
-#' @param distbn_params_list List containing all parameters for the data mixture distribution. See `generateDistbnFunc` for component structure
+#' @details
+#' See `.buildPmcParamsMclust` for the form of distbn_params_list.
+#' 
+#' 
+#' @param distbn_params_list List containing all parameters for the data mixture distribution.
 #' @param j Index of the cluster for which to generate the function for
 #' 
 #' @return Function taking argument `x` to compute $\pi_j(x)$ 
@@ -194,7 +233,7 @@ computeMonteCarloPmc <- function(distbn_params_list, mc.samples=1e5, obs.per.bat
     sum(tmp)
   }, mc.cores=num.cores)
   
-  return(sum(Reduce(c, mc.postJ)))
+  return(Reduce(`+`, mc.postJ))
 }
 
 
