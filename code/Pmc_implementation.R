@@ -220,14 +220,22 @@ library(abind)    ## Concatenate arrays
 #' @return Value of Pmc from the Monte Carlo integral
 computeMonteCarloPmc <- function(distbn_params_list, mc.samples=1e5, obs.per.batch=1e3, num.cores=ceiling(detectCores() / 2)) {
   K <- length(distbn_params_list)
+  if (K == 1) return(0)
   
   num.batches <- ceiling(mc.samples / obs.per.batch)
   mc.postJ <- mclapply(1:num.batches, function(idx) {
     obs <- .sampleMixture(distbn_params_list, obs.per.batch)
     if (is.null(dim(obs))) obs <- matrix(obs, ncol=1)
+
+    distbn.mat <- Reduce(cbind, 
+                         lapply(1:K, function(j) {
+                           densJ <- .generateDistbnFunc(distbn_params_list[[j]])
+                           sum(distbn_params_list[[j]]$prob) * densJ(obs)
+                         }))
+    post.mat <- t(apply(distbn.mat, 1, function(x) x / sum(x)))
+    
     tmp <- sapply(1:K, function(j) {
-      postJ <- .generatePosteriorProbFunc(distbn_params_list, j)
-      mc.postJ <- postJ(obs)
+      mc.postJ <- post.mat[, j]
       sum(mc.postJ * (1 - mc.postJ)) / mc.samples
     })
     sum(tmp)
