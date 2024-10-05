@@ -220,14 +220,22 @@ library(abind)    ## Concatenate arrays
 #' @return Value of Pmc from the Monte Carlo integral
 computeMonteCarloPmc <- function(distbn_params_list, mc.samples=1e5, obs.per.batch=1e3, num.cores=ceiling(detectCores() / 2)) {
   K <- length(distbn_params_list)
+  if (K == 1) return(0)
   
   num.batches <- ceiling(mc.samples / obs.per.batch)
   mc.postJ <- mclapply(1:num.batches, function(idx) {
     obs <- .sampleMixture(distbn_params_list, obs.per.batch)
     if (is.null(dim(obs))) obs <- matrix(obs, ncol=1)
+
+    distbn.mat <- Reduce(cbind, 
+                         lapply(1:K, function(j) {
+                           densJ <- .generateDistbnFunc(distbn_params_list[[j]])
+                           sum(distbn_params_list[[j]]$prob) * densJ(obs)
+                         }))
+    post.mat <- t(apply(distbn.mat, 1, function(x) x / sum(x)))
+    
     tmp <- sapply(1:K, function(j) {
-      postJ <- .generatePosteriorProbFunc(distbn_params_list, j)
-      mc.postJ <- postJ(obs)
+      mc.postJ <- post.mat[, j]
       sum(mc.postJ * (1 - mc.postJ)) / mc.samples
     })
     sum(tmp)
@@ -308,24 +316,26 @@ computePmc <- function(distbn_params_list, integralControl=list()) {
     
     if (cubatureFunc == T) x <- t(x)
     
-    fX <- sapply(1:K, function(j) {
+    distbn.mat <- sapply(1:K, function(j) {
       comp_prob <- sum(distbn_params_list[[j]]$prob)
       comp_prob * .generateDistbnFunc(distbn_params_list[[j]])(x)
     })
-    fX <- apply(fX, 1, sum)
+    fX <- apply(distbn.mat, 1, sum)
     
-    res <- sapply(1:K, function(j) {
-      postJFunc <- .generatePosteriorProbFunc(distbn_params_list, j)
-      postJ <- postJFunc(x)
+    post.mat <- t(apply(distbn.mat, 1, function(v) {
+      denom <- sum(v)
+      if (denom == 0) denom <- 1 ## If this is 0 then fX is 0 so it doesn't matter
       
-      res <- postJ * (1 - postJ) 
-      if (cubatureFunc == T) {
-        res <- res * fX
-      }
-      return(res)
+      v / denom
+    }))
+
+    res <- sapply(1:K, function(j) {
+      postJ <- post.mat[, j]
+      postJ * (1 - postJ) * fX
     })
+
     if (is.null(dim(res))) return(sum(res))
-    
+
     output <- apply(res, 1, sum)
     if (cubatureFunc == T) return(matrix(output, ncol=nrow(x)))
     

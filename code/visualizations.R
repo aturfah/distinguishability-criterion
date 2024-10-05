@@ -180,7 +180,7 @@ plotPmcMatrix <- function(phm_output, k=NULL, colors=NULL,
                           threshold=1e-3, threshold_replace="< 0.001", fmt_func=NULL,
                           include_pmc_title=T) {
   
-  k <- phm_output[[length(phm_output)]]$clusters
+  if (is.null(k)) k <- phm_output[[length(phm_output)]]$clusters
   if (is.null(colors)) colors <- brewer.pal(k, "Set1")
   if (is.null(fmt_func)) fmt_func<- function(x) round(x, 4)
 
