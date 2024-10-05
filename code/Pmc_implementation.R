@@ -316,24 +316,26 @@ computePmc <- function(distbn_params_list, integralControl=list()) {
     
     if (cubatureFunc == T) x <- t(x)
     
-    fX <- sapply(1:K, function(j) {
+    distbn.mat <- sapply(1:K, function(j) {
       comp_prob <- sum(distbn_params_list[[j]]$prob)
       comp_prob * .generateDistbnFunc(distbn_params_list[[j]])(x)
     })
-    fX <- apply(fX, 1, sum)
+    fX <- apply(distbn.mat, 1, sum)
     
-    res <- sapply(1:K, function(j) {
-      postJFunc <- .generatePosteriorProbFunc(distbn_params_list, j)
-      postJ <- postJFunc(x)
+    post.mat <- t(apply(distbn.mat, 1, function(v) {
+      denom <- sum(v)
+      if (denom == 0) denom <- 1 ## If this is 0 then fX is 0 so it doesn't matter
       
-      res <- postJ * (1 - postJ) 
-      if (cubatureFunc == T) {
-        res <- res * fX
-      }
-      return(res)
+      v / denom
+    }))
+
+    res <- sapply(1:K, function(j) {
+      postJ <- post.mat[, j]
+      postJ * (1 - postJ) * fX
     })
+
     if (is.null(dim(res))) return(sum(res))
-    
+
     output <- apply(res, 1, sum)
     if (cubatureFunc == T) return(matrix(output, ncol=nrow(x)))
     
