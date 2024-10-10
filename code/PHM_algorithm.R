@@ -124,10 +124,15 @@ computeDeltaPmcMatrix <- function(distbn_params_list, integralControl=list()) {
 #' TODO: Fill in Returns + More detailed description
 #' 
 #' @return FILL ME IN
-PHM <- function(res_mclust, data=NULL, mc_est=T, ...) {
+PHM <- function(res_mclust, data=NULL, mc_est=T, paramsList=NULL, ...) {
   ## Construct components necessary for Pmc estimation
-  paramsList <- .buildPmcParamsMclust(res_mclust)
-  K <- res_mclust$G
+  if (is.null(paramsList)) {
+    paramsList <- .buildPmcParamsMclust(res_mclust)
+    K <- res_mclust$G
+  } else {
+    if (!is.null(res_mclust)) warn("Ignoring provided res_mclust for parameters")
+    K <- length(paramsList)
+  }
   
   ## Construct the posterior data labels
   if (!is.null(data)) {
