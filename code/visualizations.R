@@ -100,7 +100,7 @@ source("code/PHM_algorithm.R")
                 xend=x, .groups="keep") %>%
       ungroup() %>%
       arrange(-yend) %>%
-      select(-ends_with(".y"))
+      dplyr::select(-ends_with(".y"))
   }
   
   ## Add horizontal components
@@ -293,7 +293,7 @@ plotPHMDistruct <- function(phm_output, k=length(phm_output),
     rowwise() %>%
     mutate(max_column = which.max(c_across(where(is.numeric)))) %>%
     ungroup() %>%
-    select(-starts_with("posterior")) %>%
+    dplyr::select(-starts_with("posterior")) %>%
     group_by(labels, max_column) %>%
     summarize(count=n()) %>%
     group_by(labels) %>%
