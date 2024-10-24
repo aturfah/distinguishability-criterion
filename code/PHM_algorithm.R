@@ -14,24 +14,38 @@ computeMonteCarloDeltaPmcMatrix <- function(distbn_params_list, mc.samples=1e5, 
   K <- length(distbn_params_list)
   
   output <- matrix(0, K, K)
-  
   num.batches <- ceiling(mc.samples / obs.per.batch)
-  for (i in (1:(K-1))) {
+  # mc.obs <- .sampleMixture(distbn_params_list = , mc.samples)
+  cat("MC Samples\n")
+  mc.obs <- Reduce(rbind, 
+                  mclapply(1:num.batches, function(idx) {
+                    lb <- 1 + obs.per.batch * (idx - 1)
+                    ub <- min(obs.per.batch * idx, mc.samples)
+                    out <- .sampleMixture(distbn_params_list, (ub-lb))
+                    if (is.null(dim(out))) out <- matrix(out, ncol=1)
+
+                    return(out)
+                  }, mc.cores=num.cores))
+
+  cat("Computing Posterior Matrix\n")
+  distbn.mat <- Reduce(cbind, 
+            mclapply(1:K, function(j) {
+              densJ <- .generateDistbnFunc(distbn_params_list[[j]])
+              sum(distbn_params_list[[j]]$prob) * densJ(mc.obs)
+            }, mc.cores=num.cores))
+  post.mat <- t(apply(distbn.mat, 1, function(x) x / sum(x)))
+
+  cat("Evaluating Integral\n")
+  for (i in 1:(K-1)) {
     for (j in (i+1):K) {
-      mc.res <- mclapply(1:num.batches, function(idx) {
-        obs <- .sampleMixture(distbn_params_list, obs.per.batch)
-        if (is.null(dim(obs))) obs <- matrix(obs, ncol=1)
-        
-        post.i <- .generatePosteriorProbFunc(distbn_params_list, i)
-        post.j <- .generatePosteriorProbFunc(distbn_params_list, j)
-        sum(post.i(obs) * post.j(obs)) / mc.samples
-      }, mc.cores=num.cores)
-      
-      output[i, j] <- Reduce(sum, mc.res)
+      post.i <- post.mat[, i]
+      post.j <- post.mat[, j]
+
+      output[i, j] <- sum(post.i * post.j) / mc.samples
       output[j, i] <- output[i, j]
     }
   }
-  
+
   output
 }
 
@@ -103,12 +117,13 @@ computeDeltaPmcMatrix <- function(distbn_params_list, integralControl=list()) {
 #' @param data NxD matrix of observations.
 .computePosteriorProbMatrix <- function(distbn_params_list, data) {
   if (is.null(dim(data))) data <- matrix(data, ncol=1)
-  
-  sapply(1:length(distbn_params_list), function(k) {
-    func <- .generatePosteriorProbFunc(distbn_params_list, k)
-    
-    func(data)
-  })
+  K <- length(distbn_params_list)
+  distbn.mat <- Reduce(cbind, 
+              lapply(1:K, function(j) {
+                densJ <- .generateDistbnFunc(distbn_params_list[[j]])
+                sum(distbn_params_list[[j]]$prob) * densJ(data)
+              }))
+  t(apply(distbn.mat, 1, function(x) x / sum(x)))
 }
 
 
@@ -133,16 +148,20 @@ PHM <- function(res_mclust, data=NULL, mc_est=T, paramsList=NULL, ...) {
     if (!is.null(res_mclust)) warn("Ignoring provided res_mclust for parameters")
     K <- length(paramsList)
   }
-  
+
   ## Construct the posterior data labels
-  if (!is.null(data)) {
+  cat("Constructing Posterior Data Matrix\n")
+  if (!is.null(data) | is.null(res_mclust)) {
     posterior_mat <- .computePosteriorProbMatrix(paramsList, data)
     data_labels <- apply(posterior_mat, 1, which.max)
+    N <- nrow(data)
   } else {
     data_labels <- res_mclust$classification
+    N <- res_mclust$n
   }
   
   ## Compute Pmc matrix
+  cat("Constructing Pmc Matrix\n")
   pmc_red_mat <- if (mc_est) {
     computeMonteCarloDeltaPmcMatrix(paramsList, ...)
   } else {
@@ -154,8 +173,8 @@ PHM <- function(res_mclust, data=NULL, mc_est=T, paramsList=NULL, ...) {
   ## Parameters/data to store
   output <- lapply(1:K, function(k) list(
     clusters=k,
-    posterior_matrix=if(is.null(data)) {NULL} else {matrix(1, nrow=res_mclust$n)},
-    labels=rep(1, res_mclust$n),
+    posterior_matrix=if(is.null(data)) {NULL} else {matrix(1, nrow=N)},
+    labels=rep(1, N),
     pmc_change=NA,
     merge_components=c(-1, -1),
     pmc=0))
