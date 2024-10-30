@@ -13,12 +13,14 @@ source("code/PHM_algorithm.R")
 #' Build dendrogram data from output of `PHM()`
 #' 
 #' @param phm_output Output of `PHM()`
-.buildPHMDendrogramData <- function(phm_output) {
+.buildPHMDendrogramData <- function(phm_output, uniform_heights=F) {
   K <- length(phm_output)
   pmc <- phm_output[[K]]$pmc
   pmc_remains <- sapply(K:2, function(k) phm_output[[k]]$pmc)
   pmc_change <- sapply((K-1):1, function(k) phm_output[[k]]$pmc_change)
-  height <- pmc / (pmc_remains)
+  height <- if (uniform_heights) {1:(K-1)} else {
+    pmc / (pmc_remains)
+  }
   merge_components <- t(sapply(K:2, function(k) phm_output[[k]]$merge_components))
   
   ## Figure out the components that merge together
@@ -141,25 +143,29 @@ source("code/PHM_algorithm.R")
 #' @param colors Optional vector with colors for the mixture components
 #' @param suppress_labels Suppress text boxes including Pmc reduction
 #' @param suppress_axis Suppress axis labels with colors
-plotPHMDendrogram <- function(phm_output, colors=NULL, suppress_labels=F, suppress_axis=F) {
-  pmc_dendro_data <- .buildPHMDendrogramData(phm_output)
+plotPHMDendrogram <- function(phm_output, colors=NULL, suppress_labels=F, suppress_axis=F, uniform_heights=F) {
+  pmc_dendro_data <- .buildPHMDendrogramData(phm_output, uniform_heights=uniform_heights)
   K <- length(pmc_dendro_data$xlab)
   if (is.null(colors) & !suppress_axis) colors <- brewer.pal(K, "Set1")
 
   if (suppress_axis) {
-    AXIS_X <- element_blank()
+    AXIS_X <- element_text(size=6)
   } else {
     AXIS_X <- element_text(color=unname(colors[pmc_dendro_data$xlab]),
                            size=10)
   }
+  
+  offset <- 1
+  if (uniform_heights) {
+    offset <- 0
+  }
 
-  plt <- ggplot(pmc_dendro_data$df, aes(x=x, y=y+1, xend=xend, yend=yend+1)) +
+  plt <- ggplot(pmc_dendro_data$df, aes(x=x, y=y+offset, xend=xend, yend=yend+offset)) +
     geom_segment() +
     # xlab("Mixture Component ID") +
     xlab("") +
     ylab("") +
     # ylab(TeX("$P_{MC} /$ Remaining $P_{MC}$")) +
-    scale_y_log10(expand=expansion(mult=c(0, 0.05))) +
     theme_bw() + theme(text=element_text(size=8),
                        axis.text.x=AXIS_X,
                        axis.text.y=element_blank(),
@@ -168,6 +174,12 @@ plotPHMDendrogram <- function(phm_output, colors=NULL, suppress_labels=F, suppre
                        panel.spacing=unit(0, "lines"),
                        panel.border=element_blank()
     )
+  
+  if (!uniform_heights) {
+    plt <- plt + scale_y_log10(expand=expansion(mult=c(0, 0.05)))
+  } else {
+    plt <- plt + scale_y_continuous(expand=expansion(mult=c(0, 0.05)))
+  }
 
   if (!suppress_labels) {
     plt <- plt + geom_label(data=pmc_dendro_data$labels,
@@ -181,7 +193,8 @@ plotPHMDendrogram <- function(phm_output, colors=NULL, suppress_labels=F, suppre
     plt <- plt + scale_x_continuous(breaks=1:K,
                                     labels=rep("\U25A0", K))
   } else {
-    plt <- plt + scale_x_continuous(breaks=1:K)
+    plt <- plt + scale_x_continuous(breaks=1:K,
+                                    labels=pmc_dendro_data$xlab)
   }
   plt
 }
