@@ -1,5 +1,7 @@
 # Interpretable Clustering with the Distinguishability Criterion
 
+NOTE: **Please check out ([this repository](https://github.com/aturfah/distinguishabilityCriterion)) for a more updated implementation of the methods in this repository**
+
 Implementations of the Distinguishability criterion and scripts to generate the results from the paper Turfah and Wen (2024) "Interpretable Clustering with the Distinguishability Criterion." ([Arxiv link](https://arxiv.org/abs/2404.15967)).
 
 ## Directory structure
